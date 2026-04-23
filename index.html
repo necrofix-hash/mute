@@ -1237,6 +1237,50 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+    // ── Hero 비디오 슬로우 인트로 (0.3x → 0.6x, 5초간 램프) ──
+    const heroVideo = document.getElementById('hero-video');
+    if (heroVideo) {
+      const SLOW = 0.3;
+      const CRUISE = 0.6;
+      const RAMP_SECONDS = 5;
+      let loopStart = 0;
+      let prevTime = 0;
+      let ticking = false;
+
+      function applyRate() {
+        const elapsed = (performance.now() - loopStart) / 1000;
+        if (elapsed < RAMP_SECONDS) {
+          heroVideo.playbackRate = SLOW + (CRUISE - SLOW) * (elapsed / RAMP_SECONDS);
+        } else {
+          heroVideo.playbackRate = CRUISE;
+        }
+      }
+
+      function tick() {
+        // 루프 감지 (currentTime 역행)
+        if (heroVideo.currentTime + 0.3 < prevTime) {
+          loopStart = performance.now();
+        }
+        prevTime = heroVideo.currentTime;
+        applyRate();
+        if (!heroVideo.paused && !heroVideo.ended) {
+          requestAnimationFrame(tick);
+        } else {
+          ticking = false;
+        }
+      }
+
+      function start() {
+        if (ticking) return;
+        ticking = true;
+        loopStart = performance.now();
+        requestAnimationFrame(tick);
+      }
+
+      heroVideo.addEventListener('playing', start);
+      if (!heroVideo.paused) start();
+    }
   })();
   </script>
 </body>
